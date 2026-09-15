@@ -49,7 +49,17 @@ class PairwiseDistance:
 
         dist_func = None
 
-        # INSERT YOUR CODE
+        if self.metric == 'euclidean':
+            if self.is_normalize:
+                dist_func = norm_ED_distance
+            else:
+                dist_func = ED_distance
+        elif self.metric == 'dtw':
+
+            # Для DTW нормализация выполняется отдельно через z_normalize
+            dist_func = DTW_distance
+        else:
+            raise ValueError(f"Unsupported metric: {self.metric}")
 
         return dist_func
 
@@ -68,7 +78,17 @@ class PairwiseDistance:
         
         matrix_shape = (input_data.shape[0], input_data.shape[0])
         matrix_values = np.zeros(shape=matrix_shape)
-        
-        # INSERT YOUR CODE
+
+        # Получаем функцию расстояния
+        dist_func = self._choose_distance()
+
+        n_series = input_data.shape[0]
+
+        for i in range(n_series):
+            for j in range(i + 1, n_series):
+                distance = dist_func(input_data[i], input_data[j])
+
+                matrix_values[i, j] = distance
+                matrix_values[j, i] = distance
 
         return matrix_values

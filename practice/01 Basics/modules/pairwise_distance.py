@@ -82,11 +82,27 @@ class PairwiseDistance:
         # Получаем функцию расстояния
         dist_func = self._choose_distance()
 
-        n_series = input_data.shape[0]
+        # Для нормализованных метрик, кроме Euclidean,
+        # предварительно выполняем z-нормализацию рядов.
+        # Для Euclidean нормализация уже учитывается
+        # внутри norm_ED_distance().
+        if self.is_normalize and self.metric != 'euclidean':
+            data = np.array([
+                z_normalize(ts) for ts in input_data
+            ])
+        else:
+            data = input_data
 
+        n_series = data.shape[0]
+
+        # Вычисляем только верхнюю половину матрицы,
+        # после чего зеркально заполняем нижнюю
         for i in range(n_series):
             for j in range(i + 1, n_series):
-                distance = dist_func(input_data[i], input_data[j])
+                distance = dist_func(
+                    data[i],
+                    data[j]
+                )
 
                 matrix_values[i, j] = distance
                 matrix_values[j, i] = distance

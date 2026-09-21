@@ -3,7 +3,7 @@ import pandas as pd
 import math
 import cv2
 import imutils
-from google.colab.patches import cv2_imshow
+import matplotlib.pyplot as plt
 
 
 class Image2TimeSeries:
@@ -32,7 +32,17 @@ class Image2TimeSeries:
         prep_img: image after preprocessing
         """
 
-        # INSERT YOUR CODE
+        # Переводим изображение в оттенки серого
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Инвертируем изображение
+        inverted = cv2.bitwise_not(gray)
+
+        # Немного размываем изображение
+        blurred = cv2.GaussianBlur(inverted, (5, 5), 0)
+
+        # Выполняем бинаризацию
+        _, prep_img = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)
 
         return prep_img
 
@@ -164,7 +174,12 @@ class Image2TimeSeries:
         for i in range(len(edge_coordinates)):
             cv2.drawContours(img, np.array([[center, edge_coordinates[i]]]), -1, (255, 0, 255), 4)
 
-        cv2_imshow(imutils.resize(img, width=200))
+        img = imutils.resize(img, width=400)
+
+        plt.figure(figsize=(6, 6))
+        plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        plt.axis('off')
+        plt.show()
 
 
     def convert(self, img: np.ndarray, is_visualize: bool = False) -> np.ndarray:

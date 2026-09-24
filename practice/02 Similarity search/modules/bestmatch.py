@@ -140,21 +140,57 @@ class NaiveBestMatchFinder(BestMatchFinder):
         """
 
         query = copy.deepcopy(query)
-        if (len(ts_data.shape) != 2): # time series set
+
+        # Если передан обычный одномерный временной ряд,
+        # разбиваем его на подпоследовательности длины query
+        if len(ts_data.shape) != 2:
             ts_data = sliding_window(ts_data, len(query))
 
         N, m = ts_data.shape
+
+        # Вычисляем размер зоны исключения для удаления
+        # пересекающихся (тривиальных) совпадений
         excl_zone = self._calculate_excl_zone(m)
 
-        dist_profile = np.ones((N,))*np.inf
+
+        dist_profile = np.ones(N) * np.inf
+
         bsf = np.inf
 
-        bestmatch = {
-            'index' : [],
-            'distance' : []
-        }
-        
-        # INSERT YOUR CODE
+        # Если требуется, заранее нормализуем запрос
+        if self.is_normalize:
+            query = z_normalize(query)
+
+        # Последовательно рассматриваем все подпоследовательности ряда
+        for i in range(N):
+
+            subsequence = ts_data[i]
+
+            # Нормализуем подпоследовательность при необходимости
+            if self.is_normalize:
+                subsequence = z_normalize(subsequence)
+
+            # Вычисляем DTW-расстояние между запросом
+            # и текущей подпоследовательностью
+            dist = DTW_distance(
+                subsequence,
+                query,
+                self.r
+            )
+
+            # Записываем расстояние в профиль
+            dist_profile[i] = dist
+
+            # Обновляем лучшее найденное расстояние
+            if dist < bsf:
+                bsf = dist
+
+        # Выбираем topK лучших непересекающихся совпадений
+        bestmatch = topK_match(
+            dist_profile,
+            excl_zone,
+            self.topK
+        )
 
         return bestmatch
 

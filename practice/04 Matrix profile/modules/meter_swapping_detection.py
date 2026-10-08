@@ -11,7 +11,7 @@ plotly.offline.init_notebook_mode(connected=True)
 from modules.mp import *
 
 
-def heads_tails(consumptions: dict, cutoff, house_idx: list) -> dict, dict:
+def heads_tails(consumptions: dict, cutoff, house_idx: list) -> (dict, dict):
     """
     Split time series into two parts: Head and Tail
 
@@ -54,9 +54,35 @@ def meter_swapping_detection(heads: dict, tails: dict, house_idx: dict, m: int) 
 
     eps = 0.001
 
-    min_score = {}
+    min_score = {'score': np.inf}
 
-    # INSERT YOUR CODE
+    for i in house_idx:
+        # "Норма": насколько Head_i похож на свой же Tail_i
+        head_i = heads[f'H_{i}'].iloc[:, 0].to_numpy()
+        tail_i = tails[f'T_{i}'].iloc[:, 0].to_numpy()
+
+        mp_ii = compute_mp(head_i, m, ts2=tail_i)
+        min_ii = mp_ii['mp'].min()
+
+        for j in house_idx:
+            if i == j:
+                continue
+
+            tail_j = tails[f'T_{j}'].iloc[:, 0].to_numpy()
+
+            # Насколько Head_i похож на Tail_j (чужой хвост)
+            mp_ij = compute_mp(head_i, m, ts2=tail_j)
+            min_ij = mp_ij['mp'].min()
+
+            score = min_ij / (min_ii + eps)
+
+            if score < min_score['score']:
+                min_score = {
+                    'score': score,
+                    'i': i,
+                    'j': j,
+                    'mp_j': mp_ij
+                }
     
     return min_score
 

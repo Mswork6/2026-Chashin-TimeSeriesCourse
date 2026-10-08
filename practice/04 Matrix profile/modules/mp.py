@@ -23,7 +23,13 @@ def compute_mp(ts1: np.ndarray, m: int, exclusion_zone: int = None, ts2: np.ndar
             (matrix profile, matrix profile index, subsequence length, exclusion zone, the first and second time series)
     """
     
-    # INSERT YOUR CODE
+    # Если ts2 не передан, вычисляем самоджойн (профиль для одного ряда)
+    if ts2 is None:
+        # stumpy.stump возвращает матрицу (n-m+1, 4). Нам нужны 0-й и 1-й столбцы.
+        mp = stumpy.stump(ts1, m)
+    else:
+        # Если передан второй ряд, вычисляем AB-join
+        mp = stumpy.stump(ts1, m, ts2, ignore_trivial=False)
 
     return {'mp': mp[:, 0],
             'mpi': mp[:, 1],

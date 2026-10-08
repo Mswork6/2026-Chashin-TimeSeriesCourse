@@ -21,7 +21,27 @@ def top_k_discords(matrix_profile: dict, top_k: int = 3) -> dict:
     discords_dist = []
     discords_nn_idx = []
 
-    # INSERT YOUR CODE
+    discords_idx = []
+    discords_dist = []
+    discords_nn_idx = []
+
+    # Копируем, чтобы не портить исходный профиль
+    mp = matrix_profile['mp'].copy()
+    mpi = matrix_profile['mpi'].copy()
+    excl_zone = matrix_profile['excl_zone']
+
+    for _ in range(top_k):
+        # Находим диссонанс с максимальным расстоянием до ближайшего соседа
+        discord_idx = int(np.argmax(mp))
+        discord_dist = float(mp[discord_idx])
+        nn_idx = int(mpi[discord_idx])
+
+        discords_idx.append(discord_idx)
+        discords_dist.append(discord_dist)
+        discords_nn_idx.append(nn_idx)
+
+        # Затираем окрестность найденного диссонанса
+        mp = apply_exclusion_zone(mp, discord_idx, excl_zone, -np.inf)
 
     return {
         'indices' : discords_idx,
